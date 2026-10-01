@@ -1,0 +1,8 @@
+# Runtime dependencies for the TopstepX futures bot (Windows-friendly).
+
+requests>=2.31.0
+numpy>=1.24.0
+python-dotenv>=1.0.0
+signalrcore>=0.9.5
+PyYAML>=6.0
+tzdata>=2024.1
