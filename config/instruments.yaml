@@ -1,0 +1,29 @@
+# Futures contract specs (CME RTH = 08:30-15:15 America/Chicago).
+
+MNQ:
+  description: Micro E-mini Nasdaq-100
+  exchange: CME
+  contract_root: CON.F.US.MNQ
+  tick_size: 0.25
+  tick_value: 0.50
+  point_value: 2.00
+  rth_open: "08:30"
+  rth_close: "15:15"
+  globex_open_sun: "17:00"
+  globex_daily_open: "17:00"
+  globex_daily_close: "16:00"
+  quarterly_months: [H, M, U, Z]
+
+MES:
+  description: Micro E-mini S&P 500
+  exchange: CME
+  contract_root: CON.F.US.MES
+  tick_size: 0.25
+  tick_value: 1.25
+  point_value: 5.00
+  rth_open: "08:30"
+  rth_close: "15:15"
+  globex_open_sun: "17:00"
+  globex_daily_open: "17:00"
+  globex_daily_close: "16:00"
+  quarterly_months: [H, M, U, Z]
