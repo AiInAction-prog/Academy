@@ -310,4 +310,4 @@ def load_settings() -> Settings:
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         log_dir=log_dir,
         instruments=_load_instruments(CONFIG_DIR / "instruments.yaml"),
-              )
+    )
