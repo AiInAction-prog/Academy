@@ -37,7 +37,7 @@ from .logger import log_event
 from .marketstream import SignalRMarketStream
 from .pricing import live_price
 from .risk import HaltError, RiskGate, TradeOutcome
-from .signals import atr, mean_reversion_signal, passes_trend_filter
+from .rules import atr, mean_reversion_signal, passes_trend_filter
 
 STRATEGY_NAME = "mean_reversion"
 

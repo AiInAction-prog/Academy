@@ -1,6 +1,6 @@
 """Bar-replay backtester for mean-reversion and VWAP trend strategies.
 
-Reuses the SAME decision logic as the live bot (bot/signals.py).
+Reuses the SAME decision logic as the live bot (bot/rules.py).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo
 
 from .broker import BrokerError, TopstepXClient
 from .config import InstrumentSpec
-from .signals import (
+from .rules import (
     adx,
     atr,
     band_rejection,
