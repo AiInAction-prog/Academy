@@ -99,7 +99,7 @@ def main():
     print("Next steps:")
     print(f"  1. Set ACCOUNT_ID={practice[0].get('id')} in .env")
     print("  2. Smoke test: .\\.venv\\Scripts\\python.exe run_bot.py --check")
-    print("  3. Keep PAPER_MODE=true until you've watched a full session")
+    print("  3. Keep PAPER_MODE=true until you start your first session")
     print()
     print("The bot refuses to trade on any account that isn't your Practice account.")
 

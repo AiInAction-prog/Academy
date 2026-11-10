@@ -123,7 +123,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "--yes",
         dest="non_interactive",
         action="store_true",
-        help="Skip the live-mode confirmation prompt (for unattended runs).",
+        help="Skip the orders-on confirmation prompt (used by the launchers).",
     )
     parser.add_argument(
         "--max-runtime",

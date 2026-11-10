@@ -40,7 +40,7 @@ $env:SYMBOL_ROOT = 'MNQ'             # micros: $2/pt (1/10th of NQ)
 $env:CONTRACT_ID = ''                # blank -> auto-resolve MNQ front month
 $env:TSX_ENV     = 'live'            # TopstepX gateway, where the Practice account lives
 
-# --- Execution: orders on your Practice account, unattended ---
+# --- Execution: 'false' sends orders to your Practice account ---
 $env:PAPER_MODE  = 'false'
 
 # --- Strategy: mean reversion (z2.0, lb80, ATR stops, trend filter off) ---

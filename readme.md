@@ -133,5 +133,5 @@ tests/                  # Unit tests (python -m unittest discover -s tests)
 
 - The bot prints `PRACTICE ACCOUNT ONLY. Not trading advice.` at startup, confirms the account is a TopStep Practice account (name starting `PRAC`), and refuses to start, or to send any order, otherwise. Don't remove that check.
 - `PAPER_MODE=true` in `.env` simulates fills locally; nothing is sent to TopstepX.
-- `PAPER_MODE=false` sends orders to your **Practice account**. Use `--non-interactive` only in unattended launchers.
+- `PAPER_MODE=false` sends orders to your **Practice account**. The launchers use `--non-interactive` to skip the typed confirmation.
 - Never commit `.env` or API keys.
