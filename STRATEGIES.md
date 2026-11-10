@@ -1,6 +1,8 @@
 # Strategies
 
-Two starter strategies ship with this repo. All signal math lives in `bot/signals.py`; live loops are in `bot/strategy.py` (mean reversion) and `bot/strategy_vwap_trend.py` (VWAP trend).
+> Educational example code for the AI in Action course. Practice account only. Not trading advice. The strategies aren't profitable as written.
+
+Two example strategies ship with this repo. They exist to give you something real to build, run and fix with an AI coding tool. All entry rules and indicator math live in `bot/rules.py`; live loops are in `bot/strategy.py` (mean reversion) and `bot/strategy_vwap_trend.py` (VWAP trend).
 
 ---
 
@@ -11,18 +13,18 @@ Two starter strategies ship with this repo. All signal math lives in `bot/signal
 
 ### Idea
 
-When price stretches far from its recent average (high z-score), bet on a snap back — buy oversold, short overbought. Edge concentrates in the cash-open morning; afternoon entries are gated off.
+When price stretches far from its recent average (high z-score), the code assumes it will snap back: it buys when price is far below the average and shorts when it's far above. New entries are limited to the morning session.
 
 ### Rules
 
 1. Every ~10s, pull 1-min bars and compute z-score vs an 80-bar SMA.
 2. **Long** when z ≤ −2.0; **short** when z ≥ +2.0.
 3. Stops/targets use **ATR scaling** (not fixed points): stop = 2.5×ATR, target = 2.0×ATR.
-4. Trend-slope filter is **off** (tested OOS-negative on recent data).
+4. Trend-slope filter is **off** by default.
 5. New entries only **08:30–13:30 CT**; flat by **15:00 CT** (5 min buffer).
 6. Server-side protective stop on every entry; software monitors target/revert exits.
 
-### Key launcher params
+### Launcher params
 
 | Param | Value | Notes |
 |-------|-------|-------|
@@ -31,13 +33,13 @@ When price stretches far from its recent average (high z-score), bet on a snap b
 | `STOP_MODE` | atr | Volatility-scaled stops |
 | `STOP_ATR_MULT` / `TARGET_ATR_MULT` | 2.5 / 2.0 | |
 | `MAX_CONTRACTS_PER_TRADE` | 2 | MNQ size |
-| `DAILY_LOSS_LIMIT` | 800 | |
-| `TRAILING_DRAWDOWN` | 1800 | Under $2K combine rule |
-| `DAILY_PROFIT_TARGET` | 700 | Bank green days |
+| `DAILY_LOSS_LIMIT` | 800 | Halt for the day after this realized loss |
+| `TRAILING_DRAWDOWN` | 1800 | Session drawdown cap |
+| `DAILY_PROFIT_TARGET` | 700 | Halt for the day after this realized gain |
 
-### Retune note (2026-06-25)
+### Change history (2026-06-25)
 
-Fixed 15pt stops went OOS-negative in trending regimes. ATR stops flipped OOS positive and cut worst-day loss. Before changing stops/size, run:
+Stops changed from a fixed 15 points to ATR-scaled stops. To see how a change behaves on past data before you make it, run:
 
 ```powershell
 python tools/backtest.py --strategy mean_reversion --symbol MNQ --days 55 --commission 0.37
@@ -52,7 +54,7 @@ python tools/backtest.py --strategy mean_reversion --symbol MNQ --days 55 --comm
 
 ### Idea
 
-Trade **with** the trend, not against it. In a trending session (high ADX), buy pullbacks to session VWAP in an uptrend and sell rallies to VWAP in a downtrend.
+Trade **with** the trend, not against it. In a trending session (high ADX), the code buys pullbacks to session VWAP in an uptrend and sells rallies to VWAP in a downtrend.
 
 ### Rules
 
@@ -64,7 +66,7 @@ Trade **with** the trend, not against it. In a trending session (high ADX), buy 
 6. **Cooldown:** 120s between trades; max 10/day.
 7. Full RTH session 08:30–15:00 CT.
 
-### Key launcher params
+### Launcher params
 
 | Param | Value | Notes |
 |-------|-------|-------|
@@ -74,13 +76,11 @@ Trade **with** the trend, not against it. In a trending session (high ADX), buy 
 | `SKIP_FIRST_MINUTES` | 0 | Open hour included |
 | `MAX_CONTRACTS_PER_TRADE` | 5 | MES size |
 | `DAILY_LOSS_LIMIT` | 900 | |
-| `PAPER_MODE` | true default | Override to `false` for live sim |
+| `PAPER_MODE` | true default | Override to `false` to send orders to your Practice account |
 
-### Retune note (2026-06-23)
+### Change history (2026-06-23)
 
-Prior config (2.5R target, skip first 30 min) traded ~0/day. R1.5 + skip0 improved trade count and OOS robustness on ~55d MES data.
-
-Backtest before changes:
+Target changed from 2.5R to 1.5R, and the first 30 minutes are no longer skipped. Backtest before changes:
 
 ```powershell
 python tools/backtest.py --strategy vwap_trend --symbol MES --days 55 --commission 0.37
@@ -92,11 +92,11 @@ While in a position the bot polls every 10s; logs may be quiet between entries. 
 
 ---
 
-## Tuning workflow
+## Changing the code
 
-1. Note live results in `data/*.csv` journals.
-2. Backtest candidate param changes.
+1. Read what the bot did in the `data/*.csv` journals.
+2. Describe the change to your AI coding tool and backtest it.
 3. Update the launcher `.ps1` env vars.
-4. Log setup + outcome in `Run_Library/SESSION_AUDIT_LOG.md`.
+4. Log what you changed and why in `Run_Library/SESSION_AUDIT_LOG.md`.
 
-Do not expect backtest P&L to match live exactly — bar replay is directional evidence, not tick-perfect.
+A backtest replays bars; it won't match what happens on the Practice account exactly, and it says nothing about future results.

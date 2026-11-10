@@ -18,6 +18,7 @@ from .broker import BrokerError, TopstepXClient
 from .config import Settings, load_settings
 from .logger import get_logger, log_event
 from .marketstream import SignalRMarketStream
+from .practice_guard import BANNER, PracticeAccountError, practice_accounts
 from .pricing import live_price
 from .risk import RiskGate
 from .singleton import SingleInstance, SingleInstanceError
@@ -34,7 +35,7 @@ LIVE_CONFIRM_PHRASE = "I UNDERSTAND"
 def _confirm_live_mode() -> None:
     print()
     print("=" * 64)
-    print(" LIVE TRADING MODE: real money, real orders will be placed.")
+    print(" ORDERS ON: orders will be sent to your TopStep Practice account.")
     print(f" Type exactly  {LIVE_CONFIRM_PHRASE!r}  to continue, anything else aborts.")
     print("=" * 64)
     try:
@@ -49,19 +50,20 @@ def _confirm_live_mode() -> None:
 def _resolve_account(client: TopstepXClient, settings: Settings) -> int:
     if settings.account_id is not None:
         return settings.account_id
-    accounts = client.list_accounts(only_active=True)
-    if not accounts:
+    practice = practice_accounts(client.list_accounts(only_active=True))
+    if not practice:
         raise SystemExit(
-            "No active accounts visible to this API key. Set ACCOUNT_ID in .env."
+            "No active Practice account visible to this API key. Activate the "
+            "TopstepX Practice account, then run discover-accounts.py."
         )
-    if len(accounts) > 1:
+    if len(practice) > 1:
         labels = ", ".join(
-            f"{a.get('id')}={a.get('name')!r}" for a in accounts
+            f"{a.get('id')}={a.get('name')!r}" for a in practice
         )
         raise SystemExit(
-            f"Multiple accounts visible: {labels}. Set ACCOUNT_ID in .env to pick one."
+            f"Multiple Practice accounts visible: {labels}. Set ACCOUNT_ID in .env to pick one."
         )
-    return int(accounts[0]["id"])
+    return int(practice[0]["id"])
 
 
 def _resolve_contract(client: TopstepXClient, settings: Settings) -> str:
@@ -121,7 +123,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "--yes",
         dest="non_interactive",
         action="store_true",
-        help="Skip the live-mode confirmation prompt (for unattended runs).",
+        help="Skip the orders-on confirmation prompt (used by the launchers).",
     )
     parser.add_argument(
         "--max-runtime",
@@ -131,6 +133,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Stop the strategy loop after this many seconds (for smoke tests).",
     )
     args = parser.parse_args(argv)
+
+    print(BANNER)
 
     settings = load_settings()
     logger = get_logger("bot", settings.log_dir, settings.log_level)
@@ -150,9 +154,9 @@ def main(argv: Optional[list[str]] = None) -> int:
             log_event(
                 logger,
                 "bot.live_armed_noninteractive",
-                message="PAPER_MODE=false with --non-interactive: live orders armed.",
+                message="PAPER_MODE=false with --non-interactive: Practice account orders armed.",
             )
-            print("WARNING: live (sim) orders armed via --non-interactive.")
+            print("WARNING: Practice account orders armed via --non-interactive.")
         else:
             _confirm_live_mode()
 
@@ -163,7 +167,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         log_event(logger, "broker.authenticated", env=settings.env, base=settings.base_url)
 
         account_id = _resolve_account(client, settings)
-        log_event(logger, "broker.account_resolved", account_id=account_id)
+        account = client.verify_practice_account(account_id)
+        log_event(
+            logger,
+            "broker.practice_account_verified",
+            account_id=account_id,
+            name=account.get("name"),
+        )
 
         if args.flatten:
             results = client.flatten_all(account_id)
@@ -213,7 +223,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
         print()
         print(f"  Environment : {settings.env}  ({settings.base_url})")
-        print(f"  Account     : {account_id}")
+        print(f"  Account     : {account_id}  ({account.get('name')}, Practice)")
         print(f"  Symbol      : {settings.symbol_root}  ({spec.description})")
         print(f"  Contract    : {contract_id}")
         print(f"  Last (bars) : {quote.last}")
@@ -271,6 +281,10 @@ def main(argv: Optional[list[str]] = None) -> int:
                 instance_lock.release()
         return 0
 
+    except PracticeAccountError as exc:
+        log_event(logger, "bot.refused_non_practice_account", error=str(exc))
+        print(f"REFUSED: {exc}", file=sys.stderr)
+        return 4
     except BrokerError as exc:
         log_event(logger, "broker.error", error=str(exc))
         print(f"BrokerError: {exc}", file=sys.stderr)

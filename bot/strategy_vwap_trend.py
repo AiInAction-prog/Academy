@@ -47,7 +47,7 @@ from .logger import log_event
 from .marketstream import SignalRMarketStream
 from .pricing import live_price
 from .risk import HaltError, RiskGate, TradeOutcome
-from .signals import adx, atr, band_rejection, session_vwap_bands
+from .rules import adx, atr, band_rejection, session_vwap_bands
 
 STRATEGY_NAME = "vwap_trend"
 

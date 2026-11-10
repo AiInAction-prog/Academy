@@ -55,7 +55,7 @@ class RiskCaps:
     max_consecutive_losses: int
     daily_profit_target: float = 0.0   # 0 = disabled; halt-flat when reached
     min_account_equity: float = 0.0    # 0 = disabled; absolute balance floor
-                                       # (combine trailing-MLL floor across runs)
+                                       # (account balance floor across runs)
 
 
 @dataclass(frozen=True)
@@ -133,7 +133,7 @@ class StrategyConfig:
 @dataclass(frozen=True)
 class Settings:
     username: str
-    api_key: str
+    api_key: str = field(repr=False)
     env: str                       # "demo" | "live"
     base_url: str
     market_hub_url: str            # SignalR real-time quote hub

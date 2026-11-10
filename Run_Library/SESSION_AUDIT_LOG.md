@@ -1,4 +1,6 @@
-# Live-Sim Session Audit Log
+# Practice Session Log
+
+> PRACTICE ACCOUNT ONLY. Not trading advice. This log is your own record of what the code did and what you changed.
 
 Running log of each trading day so configs can be retuned from accumulated evidence (not a single day). **Newest entry on top.**
 
@@ -44,30 +46,6 @@ Before changing launcher params, run `tools/backtest.py` and paste summary metri
 
 #### Retune / ops
 - ...
-
----
-
-## Example — 2026-06-26 (Fri)
-
-### Setup
-| Bot | Acct | Strategy / key params | Size | Start bal |
-|---|---|---|---|---|
-| MNQ | (your acct) | mean_reversion z2.0 lb80 ATR stop 2.5x/tgt 2.0x, trend OFF, entries 08:30-13:30 CT | 2 | $50,000 |
-| MES | (your acct) | vwap_trend adx>=30 R1.5 band buf4 skip0, 08:30-15:00 CT | 5 | $50,000 |
-
-### Result
-| Bot | Trades | Net $ | Notes |
-|---|---|---|---|
-| MNQ | 0 | $0 | No z>=2 signal yet (first ATR-stop live day) |
-| MES | 1 closed, 1 open | +$68.85 realized | SELL target hit; BUY still open at last check |
-
-### Trade log
-- 08:37 CT: SELL 5 @ target (+$90.62 gross). First entry had stop placement failure; bot flattened and retried.
-- 09:52 CT: BUY 5 with server stop — open at last check.
-
-### Retune / ops
-- ES log went quiet while holding — normal (poll loop, no heartbeat on old builds). Fix: in-position monitoring + `reattach_open_position()` on restart. Restart ES bot after flat to pick up fixes.
-- MNQ on ATR stops after 06-25 retune: fixed 15pt stops failed in trend regimes; ATR 2.5x/2.0x improved OOS on 55d backtest.
 
 ---
 

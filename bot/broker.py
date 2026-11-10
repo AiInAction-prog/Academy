@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from .config import Settings
+from .practice_guard import PracticeAccountError, require_practice_account
 
 
 TOKEN_TTL_BUFFER_SECONDS = 60
@@ -62,6 +63,9 @@ class TopstepXClient:
         self._token: Optional[str] = None
         self._token_acquired_at: Optional[float] = None
         self._token_ttl: int = 3600
+        # Account ids confirmed as Practice accounts by `verify_practice_account`.
+        # Every order-placing method refuses any account not in this set.
+        self._practice_account_ids: set[int] = set()
 
     # ------------------------------------------------------------------ auth
 
@@ -164,6 +168,19 @@ class TopstepXClient:
     def list_accounts(self, only_active: bool = True) -> List[Dict[str, Any]]:
         data = self._post("/api/Account/search", {"onlyActiveAccounts": only_active})
         return data.get("accounts", [])
+
+    def verify_practice_account(self, account_id: int) -> Dict[str, Any]:
+        """Confirm ``account_id`` is a tradable Practice account, or raise."""
+        account = require_practice_account(self.list_accounts(only_active=True), account_id)
+        self._practice_account_ids.add(int(account_id))
+        return dict(account)
+
+    def _require_verified(self, account_id: int) -> None:
+        if int(account_id) not in self._practice_account_ids:
+            raise PracticeAccountError(
+                f"Refusing to send an order to account {account_id}: it hasn't been "
+                f"verified as a TopStep Practice account."
+            )
 
     # ------------------------------------------------------------- contract
 
@@ -303,6 +320,7 @@ class TopstepXClient:
         limit_price: Optional[float] = None,
         stop_price: Optional[float] = None,
     ) -> OrderResult:
+        self._require_verified(account_id)
         side_code = 0 if side.upper() == "BUY" else 1
         type_map = {"MARKET": 2, "LIMIT": 1, "STOP": 4}
         if order_type.upper() not in type_map:
@@ -379,6 +397,7 @@ class TopstepXClient:
         return data.get("positions", [])
 
     def close_position(self, account_id: int, contract_id: str) -> Dict[str, Any]:
+        self._require_verified(account_id)
         return self._post(
             "/api/Position/closeContract",
             {"accountId": account_id, "contractId": contract_id},
